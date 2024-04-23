@@ -176,14 +176,14 @@ shinyServer(function(input, output, session) {
                          print(input$in_DtmFile$datapath)
                          dtm <- rast(input$in_DtmFile$datapath)
                          
-                         chm <- dsm - dtm
+                         chm <- calc_differ(dsm, dtm)
                          ttops <- detect_trees(chm_dsm = chm, ws = 3, crs = 6675)
                          crowns <- segment_crowns(chm_dsm = chm, ttops = ttops, crs = 6675)
                          print(paste0('PCD', 'dtm'))
                        },
                        'CLASSIFY' = {
                          dtm <- generate_dtm(las = las, res = 0.33, crs = 6675) #!!!!
-                         chm <- dsm - dtm
+                         chm <- calc_differ(dsm, dtm)
                          ttops <- detect_trees(chm_dsm = chm, ws = 3, crs = 6675)
                          crowns <- segment_crowns(chm_dsm = chm, ttops = ttops, crs = 6675)
                          print(paste0('PCD', 'classify'))
@@ -212,7 +212,7 @@ shinyServer(function(input, output, session) {
                switch (input$in_NormarizeMethods,
                        'DTM' = {
                          dtm <- rast(input$in_DtmFile$datapath)
-                         chm <- dsm - dtm
+                         chm <- calc_differ(dsm, dtm)
                          ttops <- detect_trees(chm_dsm = chm, ws = 3, crs = 6675)
                          crowns <- segment_crowns(chm_dsm = chm, ttops = ttops, crs = 6675)
                          print(paste0('RASTER', 'dtm'))
