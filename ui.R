@@ -93,6 +93,7 @@ body <- dashboardBody(
     
     tags$style(HTML(''))
   ),
+  tags$script(HTML("$('body').addClass('fixed');")),
   
   tabItems(
     # ---- main settings ui ----
