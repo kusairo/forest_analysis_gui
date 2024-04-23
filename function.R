@@ -78,11 +78,11 @@ segment_crowns <- function(
 calc_differ <- function(raster1, raster2) {
   if (mean(res(raster1)) <= mean(res(raster2))) {
     tmp_raster2 <- resample(raster2, raster1)
-    diff <- raster1 - raster2
+    diff <- raster1 - tmp_raster2
   }
   else {
     tmp_raster1 <- resample(raster1, raster2)
-    diff <- raster2 - raster1
+    diff <- raster2 - tmp_raster1
   }
   return(diff)
 }

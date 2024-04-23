@@ -156,6 +156,8 @@ shinyServer(function(input, output, session) {
     ttops <- NA
     crowns <- NA
     
+    output$ui_process_start <- renderText({paste0('PROCESS START')})
+    
     print('start')
     switch(input$in_SourceType,
            'PCD' = {

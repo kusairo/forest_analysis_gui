@@ -125,7 +125,7 @@ body <- dashboardBody(
           box(
             title = HTML('必要データ・注意事項'),
             width = NULL,
-            status = 'primary',
+            status = 'warning',
             solidHeader = TRUE,
             uiOutput('ui_ProcessSummary')
           )
