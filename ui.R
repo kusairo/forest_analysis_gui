@@ -1,5 +1,6 @@
 library(shiny)
 library(shinydashboard)
+library(leaflet)
 source('general.R', local = TRUE)
 
 
@@ -235,10 +236,10 @@ body <- dashboardBody(
       actionButton('in_refresh', label = 'リセット', icon = icon('rotate')),
       fluidRow(
         box(
-          title = 'コマンド',
+          title = '処理コマンド',
           width = NULL,
           solidHeader = TRUE,
-          textOutput('ui_process_start')
+          textOutput('ui_process')
         )
       )
     ),
@@ -280,11 +281,19 @@ body <- dashboardBody(
             fluidRow(
               column(width = 6,
                      box(width = NULL,
-                         title = 'ITD plot',
-                         plotOutput(outputId = 'itdplot')),
-                     box(width = NULL,
-                         title = 'Crown plot',
-                         plotOutput(outputId = 'crownplot'))
+                         title = '単木抽出結果',
+                         status = 'primary',
+                         solidHeader = TRUE,
+                         leafletOutput('ui_itdmap'),
+                         actionButton("in_itdmap_reset", "マップリセット")
+                     )
+                     
+                     # box(width = NULL,
+                     #     title = 'ITD plot',
+                     #     plotOutput(outputId = 'itdplot')),
+                     # box(width = NULL,
+                     #     title = 'Crown plot',
+                     #     plotOutput(outputId = 'crownplot'))
               ),
               column(width = 6,
                      box(width = NULL,

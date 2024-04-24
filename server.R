@@ -12,6 +12,7 @@ library(lidR)
 library(terra)
 library(colorspace)
 library(sf)
+library(leaflet)
 
 
 source("function.R", local = TRUE)
@@ -156,7 +157,7 @@ shinyServer(function(input, output, session) {
     ttops <- NA
     crowns <- NA
     
-    output$ui_process_start <- renderText({paste0('PROCESS START')})
+    output$ui_process <- renderText({paste0('PROCESS START')})
     
     print('start')
     switch(input$in_SourceType,
@@ -166,7 +167,8 @@ shinyServer(function(input, output, session) {
              name <- input$in_LasFile$name
              
              if (input$in_Normalized){
-               chm <- generate_dsm(las = las, res = 0.33, crs = 6675) #!!!!
+               dsm <- generate_dsm(las = las, res = 0.33, crs = 6675) #!!!!
+               chm <- dsm
                ttops <- detect_trees(chm_dsm = chm, ws = 3, crs = 6675)
                crowns <- segment_crowns(chm_dsm = chm, ttops = ttops, crs = 6675)
                print(paste0('PCD', 'normed'))
@@ -202,7 +204,8 @@ shinyServer(function(input, output, session) {
            
            'RASTER' = {
              if (input$in_Normalized){
-               chm <- rast(input$in_DsmFile$datapath)
+               dsm <- rast(input$in_DsmFile$datapath)
+               chm <- dsm
                name <- input$in_DsmFile$name
                ttops <- detect_trees(chm_dsm = chm, ws = 3, crs = 6675)
                crowns <- segment_crowns(chm_dsm = chm, ttops = ttops, crs = 6675)
@@ -236,9 +239,21 @@ shinyServer(function(input, output, session) {
            }
       )
       print('finish')
-      return (list(name = name, las = las, chm = chm, dsm = dsm, dtm = dtm, ttops = ttops, crowns = crowns))
+      return (
+        list(name = name, 
+             las = las, 
+             chm = chm, 
+             dsm = dsm, 
+             dtm = dtm, 
+             ttops = ttops, 
+             crowns = crowns,
+             xmin = xmin(dsm),
+             ymin = ymin(dsm),
+             xmax = xmax(dsm),
+             ymax = ymax(dsm))
+        )
     })
-  output$ui_process_start <- renderText({paste0('FINISHED: ', results()$name)})
+  output$ui_process <- renderText({paste0('FINISHED: ', results()$name)})
   
 
   # ----**render UI**----
@@ -261,19 +276,36 @@ shinyServer(function(input, output, session) {
     tags$li(paste0(''))
   ))
   
-  output$itdplot <- renderPlot({
-    if (~is.na(results()$chm)) {
-      plot(results()$chm)
-    }
-    else {
-      plot(results()$dsm)
-    }
-    plot(sf::st_geometry(results()$ttops), add = TRUE, pch = 3)
+  
+  itd_points <- eventReactive(input$recalc, {
+    project(results()$ttops, "epsg:4326")
+  }, ignoreNULL = FALSE)
+  
+  output$ui_itdmap <- renderLeaflet({
+    leaflet() %>%
+      addTiles(urlTemplate = 'https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png',
+               attribution = "<a href='https://maps.gsi.go.jp/development/ichiran.html' target='_blank'>地理院タイル</a>",
+               tileOptions(minZoom = 15, maxZoom = 18, maxNativeZoom=18, minNativeZoom=5)
+      ) %>%
+      addRasterImage(results()$dtm)
+      # addRasterImage(as.contour(results()$dtm))
+      # addMarkers(data = itd_points())
   })
-  output$crownplot <- renderPlot({
-    plot(results()$crowns, col = pastel.colors(200))
-    plot(sf::st_geometry(results()$ttops), add = TRUE, pch = 3)
-  })
+
+  
+  # output$itdplot <- renderPlot({
+  #   if (~is.na(results()$chm)) {
+  #     plot(results()$chm)
+  #   }
+  #   else {
+  #     plot(results()$dsm)
+  #   }
+  #   plot(sf::st_geometry(results()$ttops), add = TRUE, pch = 3)
+  # })
+  # output$crownplot <- renderPlot({
+  #   plot(results()$crowns, col = pastel.colors(200))
+  #   plot(sf::st_geometry(results()$ttops), add = TRUE, pch = 3)
+  # })
 
 
   # ----**DOWNLOAD OUTPUTS**----
