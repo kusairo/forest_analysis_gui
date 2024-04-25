@@ -251,26 +251,32 @@ body <- dashboardBody(
 
     # ---- dtm ui ----
     tabItem(tabName = 'tab_dtm',
-      h1('Digital Terrain Models'),
+      h1('地形モデル'),
       fluidRow(
-        column(width = 6,
-          box(width = NULL,
-            title = 'DTM plot',
-            textOutput(outputId = 'test_text'),
-            
-            plotOutput(outputId = 'dtmplot')
-          )
+        column(width = 8,
+           box(width = NULL,
+               title = '地形図',
+               status = 'primary',
+               solidHeader = TRUE,
+               leafletOutput('ui_dtmmap')
+           )
         ),
+        column(width = 4,
+           box(width = NULL,
+               title = '地形モデル概要',
+               htmlOutput(outputId = 'dtm_info')
+           )
+        )
+      ),
+
+      fluidRow(
         column(width = 6,
           box(width = NULL,
             title = 'generate metrics',
             htmlOutput(outputId = 'dtm_metrics')
             # textOutput(outputId = 'dtm_metrics')
           ),
-          box(width = NULL,
-            title = 'DTM Information',
-            htmlOutput(outputId = 'dtm_info')
-          )
+
         )
       )
     ),
