@@ -264,6 +264,7 @@ body <- dashboardBody(
         column(width = 4,
            box(width = NULL,
                title = '地形モデル概要',
+               solidHeader = TRUE,
                htmlOutput(outputId = 'dtm_info')
            )
         )
@@ -272,7 +273,10 @@ body <- dashboardBody(
       fluidRow(
         column(width = 6,
           box(width = NULL,
-            title = 'generate metrics',
+            title = '地形モデル処理方法概要',
+            solidHeader = TRUE,
+            collapsible = TRUE,
+            collapsed = TRUE,
             htmlOutput(outputId = 'dtm_metrics')
             # textOutput(outputId = 'dtm_metrics')
           ),
@@ -291,7 +295,6 @@ body <- dashboardBody(
                          status = 'primary',
                          solidHeader = TRUE,
                          leafletOutput('ui_itdmap'),
-                         actionButton("in_itdmap_reset", "マップリセット")
                      )
                      
                      # box(width = NULL,

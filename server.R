@@ -283,28 +283,25 @@ shinyServer(function(input, output, session) {
   # ---- dtm results ----
   output$ui_dtmmap <- renderLeaflet({
     contour_dtm <- project(as.contour(results()$dtm, nlevels = 10), 'epsg:4326')
-    leaflet(options = leafletOptions(minZoom = 14, maxZoom = 20, wheelPxPerZoomLevel = 250)) %>%
+    leaflet(options = leafletOptions(minZoom = 14, maxZoom = 22, wheelPxPerZoomLevel = 250)) %>%
       addTiles(urlTemplate = 'https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png',
                attribution = "<a href='https://maps.gsi.go.jp/development/ichiran.html' target='_blank'>地理院タイル</a>",
-               options = tileOptions(minZoom = 14, maxZoom = 20, maxNativeZoom=18, minNativeZoom=0)
+               options = tileOptions(minZoom = 14, maxZoom = 22, maxNativeZoom=18, minNativeZoom=0)
       ) %>%
       addPolylines(data = contour_dtm, color = 'red', weight = 2)
   })
   
   
   # ---- itd results ----
-  itd_points <- eventReactive(input$recalc, {
-    project(results()$ttops, "epsg:4326")
-  }, ignoreNULL = FALSE)
-  
   output$ui_itdmap <- renderLeaflet({
-    leaflet(options = leafletOptions(minZoom = 14, maxZoom = 20, wheelPxPerZoomLevel = 250)) %>%
+    poly_crown <- project(as.polygons(results()$crowns), 'epsg:4326')
+    leaflet(options = leafletOptions(minZoom = 14, maxZoom = 22, wheelPxPerZoomLevel = 250)) %>%
       addTiles(urlTemplate = 'https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png',
                attribution = "<a href='https://maps.gsi.go.jp/development/ichiran.html' target='_blank'>地理院タイル</a>",
-               options = tileOptions(minZoom = 14, maxZoom = 20, maxNativeZoom=18, minNativeZoom=0)
+               options = tileOptions(minZoom = 14, maxZoom = 22, maxNativeZoom=18, minNativeZoom=0)
       ) %>%
-      addRasterImage(results()$dtm)
-      # addRasterImage(as.contour(results()$dtm))
+      addPolygons(data = poly_crown, color = 'red', fill = TRUE, fillOpacity = 0, weight = 2)
+    # addRasterImage(as.contour(results()$dtm))
       # addMarkers(data = itd_points())
   })
 
