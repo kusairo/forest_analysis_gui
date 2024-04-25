@@ -240,7 +240,16 @@ shinyServer(function(input, output, session) {
     )
     
     # post-process for results
-    # ttops$geometry <- st_multipoint(st_coordinates(ttops$geometry), dim = 'XYZ')
+    trees <- st_zm(ttops)
+    trees$Z <- as.vector(extract(dsm, ttops, ID = FALSE, raw = TRUE))
+    trees$height <- rep(NaN, nrow(trees))
+    if (class(chm) == "SpatRaster") {trees$height <- as.vector(extract(chm, ttops, ID = FALSE, raw = TRUE))}
+    crowns <- st_as_sf(as.polygons(crowns))
+    trees$crown_size <- as.vector(st_area(crowns))
+    trees$crown_diamiter <- sqrt(trees$crown_size/ pi) * 2
+    crowns$height <- trees$height
+    crowns$crown_size <- trees$crown_size
+    crowns$crown_diamiter <- trees$crown_diamiter
     
     print('finish')
     return (
@@ -249,12 +258,9 @@ shinyServer(function(input, output, session) {
            chm = chm, 
            dsm = dsm, 
            dtm = dtm, 
-           ttops = ttops, 
-           crowns = crowns,
-           xmin = xmin(dsm),
-           ymin = ymin(dsm),
-           xmax = xmax(dsm),
-           ymax = ymax(dsm))
+           trees = trees, 
+           crowns = crowns
+           )
       )
     })
   output$ui_process <- renderText({paste0('FINISHED: ', results()$name)})
@@ -294,13 +300,14 @@ shinyServer(function(input, output, session) {
   
   # ---- itd results ----
   output$ui_itdmap <- renderLeaflet({
-    poly_crown <- project(as.polygons(results()$crowns), 'epsg:4326')
     leaflet(options = leafletOptions(minZoom = 14, maxZoom = 22, wheelPxPerZoomLevel = 250)) %>%
       addTiles(urlTemplate = 'https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png',
                attribution = "<a href='https://maps.gsi.go.jp/development/ichiran.html' target='_blank'>地理院タイル</a>",
                options = tileOptions(minZoom = 14, maxZoom = 22, maxNativeZoom=18, minNativeZoom=0)
       ) %>%
-      addPolygons(data = poly_crown, color = 'red', fill = TRUE, fillOpacity = 0, weight = 2)
+      addRasterImage(if (class(chm) == "SpatRaster") results()$chm else results()$dsm, colors = 'Spectral', opacity = 0.5) %>%
+      addPolygons(data = st_transform(results()$crowns, crs = st_crs('epsg:4326')), color = 'red', fill = TRUE, fillOpacity = 0, weight = 2) %>%
+      addMarkers(data = st_transform(results()$trees, crs = st_crs('epsg:4326')))
     # addRasterImage(as.contour(results()$dtm))
       # addMarkers(data = itd_points())
   })
@@ -343,7 +350,7 @@ shinyServer(function(input, output, session) {
       paste0(gsub("\\..+$", "", results()$name), '-ttops.csv')
     },
     content = function(file) {
-      st_write(st_zm(results()$ttops), file, layer_options = "GEOMETRY=AS_XY", append=FALSE)
+      st_write(st_zm(results()$trees), file, layer_options = "GEOMETRY=AS_XY", append=FALSE)
     }
   )
   output$export_crown <- downloadHandler(
