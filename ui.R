@@ -84,15 +84,16 @@ sidebar <- dashboardSidebar(
 # ---- body ui ----
 body <- dashboardBody(
   tags$head(
+    tags$link(rel = "stylesheet", type = "text/css", href = "mystyle.css"),
+    
     tags$style(HTML('.gear { font-size: 20px; }')),
-    tags$style(HTML('.mound { font-size: 20px; }')),
-    tags$style(HTML('.tree { font-size: 20px; }')),
-    tags$style(HTML('.newspaper { font-size: 20px; }')),
-    tags$style(HTML('.question-circle { font-size: 20px; }')),
+    # tags$style(HTML('.mound { font-size: 20px; }')),
+    # tags$style(HTML('.tree { font-size: 20px; }')),
+    # tags$style(HTML('.newspaper { font-size: 20px; }')),
+    # tags$style(HTML('.question-circle { font-size: 20px; }')),
     tags$style(HTML(".shiny-output-error { visibility: hidden; }")),
     tags$style(HTML(".shiny-output-error:before { visibility: hidden; }")),
     
-    tags$style(HTML(''))
   ),
   tags$script(HTML("$('body').addClass('fixed');")),
   
@@ -287,27 +288,21 @@ body <- dashboardBody(
 
     # ---- itd ui ----
     tabItem(tabName = 'tab_itd',
-            h1('Individual Tree Detection'),
+            h1('単木抽出結果'),
             fluidRow(
-              column(width = 6,
+              column(width = 8,
                      box(width = NULL,
-                         title = '単木抽出結果',
+                         title = '立木マップ',
                          status = 'primary',
                          solidHeader = TRUE,
-                         leafletOutput('ui_itdmap'),
+                         div(leafletOutput('ui_itdmap', height='100%'), style = "height: calc(100vh - 250px)"),
                      )
-                     
-                     # box(width = NULL,
-                     #     title = 'ITD plot',
-                     #     plotOutput(outputId = 'itdplot')),
-                     # box(width = NULL,
-                     #     title = 'Crown plot',
-                     #     plotOutput(outputId = 'crownplot'))
               ),
-              column(width = 6,
+              column(width = 4,
                      box(width = NULL,
-                         title = 'tree information',
-                         tableOutput(outputId = 'treeinfo'))
+                         title = '立木情報',
+                         div(class='vartical_table', htmlOutput(outputId = 'ui_treeinfo'))
+                        )
               )
             )
     ),

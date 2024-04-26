@@ -7,6 +7,7 @@
 #    http://shiny.rstudio.com/
 #
 
+library(tidyverse)
 library(shiny)
 library(lidR)
 library(terra)
@@ -241,10 +242,12 @@ shinyServer(function(input, output, session) {
     
     # post-process for results
     trees <- st_zm(ttops)
-    trees$Z <- as.vector(extract(dsm, ttops, ID = FALSE, raw = TRUE))
+    trees$Z <- as.vector(terra::extract(dsm, ttops, ID = FALSE, raw = TRUE))
     trees$height <- rep(NaN, nrow(trees))
     if (class(chm) == "SpatRaster") {trees$height <- as.vector(extract(chm, ttops, ID = FALSE, raw = TRUE))}
     crowns <- st_as_sf(as.polygons(crowns))
+    crowns$treeID <- trees$treeID
+
     trees$crown_size <- as.vector(st_area(crowns))
     trees$crown_diamiter <- sqrt(trees$crown_size/ pi) * 2
     crowns$height <- trees$height
@@ -288,13 +291,12 @@ shinyServer(function(input, output, session) {
   
   # ---- dtm results ----
   output$ui_dtmmap <- renderLeaflet({
-    contour_dtm <- project(as.contour(results()$dtm, nlevels = 10), 'epsg:4326')
-    leaflet(options = leafletOptions(minZoom = 14, maxZoom = 22, wheelPxPerZoomLevel = 250)) %>%
-      addTiles(urlTemplate = 'https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png',
-               attribution = "<a href='https://maps.gsi.go.jp/development/ichiran.html' target='_blank'>地理院タイル</a>",
-               options = tileOptions(minZoom = 14, maxZoom = 22, maxNativeZoom=18, minNativeZoom=0)
-      ) %>%
-      addPolylines(data = contour_dtm, color = 'red', weight = 2)
+      leaflet(options = leafletOptions(minZoom = 14, maxZoom = 22, wheelPxPerZoomLevel = 250)) %>%
+        addTiles(urlTemplate = 'https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png',
+                 attribution = "<a href='https://maps.gsi.go.jp/development/ichiran.html' target='_blank'>地理院タイル</a>",
+                 options = tileOptions(minZoom = 14, maxZoom = 22, maxNativeZoom=18, minNativeZoom=0)
+        ) %>%
+        addPolylines(data = project(as.contour(results()$dtm, nlevels = 10), 'epsg:4326'), color = 'red', weight = 2)
   })
   
   
@@ -306,10 +308,24 @@ shinyServer(function(input, output, session) {
                options = tileOptions(minZoom = 14, maxZoom = 22, maxNativeZoom=18, minNativeZoom=0)
       ) %>%
       addRasterImage(if (class(chm) == "SpatRaster") results()$chm else results()$dsm, colors = 'Spectral', opacity = 0.5) %>%
-      addPolygons(data = st_transform(results()$crowns, crs = st_crs('epsg:4326')), color = 'red', fill = TRUE, fillOpacity = 0, weight = 2) %>%
-      addMarkers(data = st_transform(results()$trees, crs = st_crs('epsg:4326')))
-    # addRasterImage(as.contour(results()$dtm))
-      # addMarkers(data = itd_points())
+      addPolygons(layerId = ~treeID, data = st_transform(results()$crowns, crs = st_crs('epsg:4326')), color = 'red', fill = TRUE, fillOpacity = 0, weight = 2) %>%
+      addCircleMarkers(data = st_transform(results()$trees, crs = st_crs('epsg:4326')), radius = 0.33, color = 'red')
+  })
+  
+
+  output$ui_treeinfo <- renderUI({
+    tmp <- cbind(as.data.frame(st_coordinates(results()$trees)), st_drop_geometry(results()$trees)) %>% 
+      filter(treeID == as.int(input$ui_itdmap_shape_click$id))
+    
+    tags$table(
+      tags$tr(tags$th('TreeID'), tags$td(tmp$treeID)),
+      tags$tr(tags$th('X'), tags$td(tmp$X)),
+      tags$tr(tags$th('Y'), tags$td(tmp$Y)),
+      tags$tr(tags$th('Z'), tags$td(tmp$Z)),
+      tags$tr(tags$th('樹高 [m]'), tags$td(tmp$height)),
+      tags$tr(tags$th('樹冠サイズ[m2]'), tags$td(tmp$crown_size)),
+      tags$tr(tags$th('樹冠半径[m]'), tags$td(tmp$crown_diamiter))
+    )
   })
 
   
