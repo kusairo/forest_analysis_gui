@@ -7,7 +7,7 @@
 #    http://shiny.rstudio.com/
 #
 
-library(tidyverse)
+# library(tidyverse)
 library(shiny)
 library(lidR)
 library(terra)
